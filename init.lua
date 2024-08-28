@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -164,8 +164,17 @@ vim.opt.scrolloff = 10
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- exit
+vim.keymap.set('n', '<leader><Esc>', vim.cmd.Ex, { desc = '[E]xit to fileview' })
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror message' })
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+
+-- disable s
+vim.keymap.set({ 'n', 'x' }, 's', '<Nop>')
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -608,8 +617,8 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
+        gopls = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -850,6 +859,7 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
+      --  'bing' 'zing' 'bang
       require('mini.ai').setup { n_lines = 500 }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
@@ -902,6 +912,86 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+  {
+
+    -- Harpoon plugin configuration
+    {
+      'ThePrimeagen/harpoon',
+      branch = 'harpoon2',
+      lazy = false,
+      requires = { 'nvim-lua/plenary.nvim' }, -- if harpoon requires this
+      config = function()
+        require('harpoon').setup {}
+
+        local function toggle_telescope_with_harpoon(harpoon_files)
+          local file_paths = {}
+          for _, item in ipairs(harpoon_files.items) do
+            table.insert(file_paths, item.value)
+          end
+
+          require('telescope.pickers')
+            .new({}, {
+              prompt_title = 'Harpoon',
+              finder = require('telescope.finders').new_table {
+                results = file_paths,
+              },
+              previewer = require('telescope.config').values.file_previewer {},
+              sorter = require('telescope.config').values.generic_sorter {},
+            })
+            :find()
+        end
+        vim.keymap.set('n', 'ht', function()
+          local harpoon = require 'harpoon'
+          toggle_telescope_with_harpoon(harpoon:list())
+        end, { desc = 'Open harpoon window' })
+      end,
+      keys = {
+        {
+          'hx',
+          function()
+            require('harpoon'):list():append()
+          end,
+          desc = 'harpoon file',
+        },
+        {
+          'hm',
+          function()
+            local harpoon = require 'harpoon'
+            harpoon.ui:toggle_quick_menu(harpoon:list())
+          end,
+          desc = 'harpoon quick menu',
+        },
+        {
+          'h1',
+          function()
+            require('harpoon'):list():select(1)
+          end,
+          desc = 'harpoon to file 1',
+        },
+        {
+          'h2',
+          function()
+            require('harpoon'):list():select(2)
+          end,
+          desc = 'harpoon to file 2',
+        },
+        {
+          'h3',
+          function()
+            require('harpoon'):list():select(3)
+          end,
+          desc = 'harpoon to file 3',
+        },
+        {
+          'h4',
+          function()
+            require('harpoon'):list():select(4)
+          end,
+          desc = 'harpoon to file 4',
+        },
+      },
+    },
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
